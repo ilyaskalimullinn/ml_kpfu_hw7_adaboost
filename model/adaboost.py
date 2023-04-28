@@ -81,7 +81,6 @@ class AdaBoostDT:
         self.__build_tree(inputs, targets, weights, self.root, 0, metric)
 
     def __build_tree(self, inputs, targets, weights, node, depth, metric):
-        # todo
 
         N = weights.sum()
         if depth >= self.max_depth or metric <= self.min_metric or targets.shape[0] <= self.min_elem:
@@ -101,19 +100,6 @@ class AdaBoostDT:
 
     def __build_splitting_node(self, inputs: np.ndarray, targets: np.ndarray, weights: np.ndarray, metric: float,
                                N: float):
-        # todo
-        """
-
-        :param inputs: train inputs that came to this node
-        :param targets: train targets that came to this node
-        :param metric: metric (entropy or variance) for this node
-        :return: feature index for feature selection function,
-                threshold for splitting function,
-                indexes for elements that go to the left child node,
-                indexes for elements that go to the right child node,
-                metric value for left node,
-                metric value for right node
-        """
         if N is None:
             N = weights.sum()
 
