@@ -6,33 +6,57 @@ import numpy as np
 class AdaBoost:
 
     def __init__(self, M):
+        self.classifiers = []
         self.M = M
+        self.classifier_weights = None
 
-        self.input_weights: np.ndarray
-        self.classifier_weights: np.ndarray
-
-    def __init_weights(self, N):
+    def _init_input_weights(self, N):
         """ initialisation of input variables weights"""
-        self.classifier_weights = np.ones(shape=(N,)) / N
+        return np.ones(shape=(N,)) / N
 
-    def update_weights(self, gt, predict, weights, weight_weak_classifiers):
+    def update_input_weights(self, targets, predictions, input_weights, weak_classifier_weight):
         """ update weights functions DO NOT use loops"""
-        pass
+        a = np.exp((targets != predictions).astype(int) * weak_classifier_weight)
+        input_weights = input_weights * a
+        input_weights = input_weights / input_weights.sum()
+        return input_weights
 
-    def calculate_error(self, gt, predict, weights):
+    def calculate_error(self, targets, predictions, weights):
         """ weak classifier error calculation DO NOT use loops"""
-        pass
+        return weights[targets != predictions].sum()
 
-    def calculate_classifier_weight(self, gt, predict, weights):
+    def calculate_classifier_weight(self, error):
         """ weak classifier weight calculation DO NOT use loops"""
-        pass
+        return np.log((1 - error) / error)
 
     def train(self, inputs, targets):
         """ train model"""
+        N = inputs.shape[0]
+        input_weights = self._init_input_weights(N)
+        classifier_weights = []
 
-    def get_prediction(self, vectors):
+        for i in range(self.M):
+            self.classifiers.append(self.train_weak_classifier(inputs, targets, input_weights))
+            predictions = self.classifiers[i].get_predictions(inputs)
+            error = self.calculate_error(targets, predictions, input_weights)
+            classifier_weights.append(self.calculate_classifier_weight(error))
+            input_weights = self.update_input_weights(targets, predictions, input_weights, classifier_weights[i])
+
+            if np.isclose(error, 0.5):
+                break
+
+        self.classifier_weights = np.array(classifier_weights).reshape(1, -1)
+
+    def get_predictions(self, inputs):
         """ adaboost get prediction """
-        pass
+        weak_classifier_answers = np.array([c.get_predictions(inputs) for c in self.classifiers])
+        return np.sign(self.classifier_weights @ weak_classifier_answers)
+
+    def train_weak_classifier(self, inputs, targets, input_weights):
+        """ train weak classifier, adaboost decision tree """
+        classifier = AdaBoostDT()
+        classifier.train(inputs, targets, input_weights)
+        return classifier
 
 
 class AdaBoostDT:
